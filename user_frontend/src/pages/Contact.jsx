@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Container } from '../components/ui/Container'
 import { getContactConfig } from '../config/contact'
 import axios from 'axios'
-import { BASE_URL } from '../config/api'
+import { API } from '../config/api'
 import { useNavigate } from 'react-router-dom'
 import { isUserLoggedIn } from '../utils/auth'
 
@@ -50,7 +50,7 @@ const Contact = () => {
     setStatus({ type: '', text: '' })
     setSending(true)
     try {
-      await axios.post(`${BASE_URL}/api/contact`, {
+      await axios.post(`${API}/api/contact`, {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         subject: formData.subject.trim(),

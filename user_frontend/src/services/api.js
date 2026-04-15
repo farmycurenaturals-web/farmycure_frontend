@@ -1,10 +1,10 @@
-/**
- * Dev: same-origin /api via Vite proxy → backend :5000 (works with LAN IP too).
- * Production: set VITE_API_BASE_URL to your API (e.g. https://api.example.com/api).
- */
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.DEV ? '/api' : 'http://localhost:5000/api');
+const API = import.meta.env.VITE_API_URL || 'https://api.farmycure.com';
+
+if (import.meta.env.DEV) {
+  console.log('API URL:', API);
+}
+
+const BASE_URL = `${API}/api`;
 
 const getAuthToken = () => localStorage.getItem('farmycure_token');
 const getRefreshToken = () => localStorage.getItem('farmycure_refresh_token');

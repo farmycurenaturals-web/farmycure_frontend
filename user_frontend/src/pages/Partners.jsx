@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import axios from 'axios'
-import { BASE_URL } from '../config/api'
+import { API } from '../config/api'
 import { useNavigate } from 'react-router-dom'
 import { isUserLoggedIn } from '../utils/auth'
 
@@ -82,7 +82,7 @@ const Partners = () => {
 
     setIsSubmitting(true)
     try {
-      await axios.post(`${BASE_URL}/api/trade`, {
+      await axios.post(`${API}/api/trade`, {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         contact: formData.contact.trim(),
