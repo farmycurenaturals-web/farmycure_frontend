@@ -1,1 +1,1 @@
-export const API = import.meta.env.VITE_API_URL || 'https://api.farmycure.com';
+export const API = import.meta.env.VITE_API_URL;

@@ -9,14 +9,6 @@ export default defineConfig({
     strictPort: true,
     host: true,
     allowedHosts: true,
-    proxy: {
-      '/api': {
-        target: 'https://api.farmycure.com',
-        changeOrigin: true,
-        timeout: 60_000,
-        proxyTimeout: 60_000,
-      },
-    },
   },
   preview: {
     port: 5173,

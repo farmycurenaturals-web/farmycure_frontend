@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL || 'https://api.farmycure.com';
+const API = import.meta.env.VITE_API_URL;
 
 if (import.meta.env.DEV) {
   console.log('API URL:', API);
