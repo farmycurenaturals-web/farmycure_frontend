@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, createBrowserRouter, RouterProvider, useLocation } from 'react-router-dom'
+import { Navigate, createHashRouter, RouterProvider, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { CartProvider } from './context/CartContext'
 import { AuthProvider } from './context/AuthContext'
@@ -36,7 +36,8 @@ const ProtectedRoute = ({ children }) => {
   return children
 }
 
-const router = createBrowserRouter([
+// 🔥 FIX: using createHashRouter instead of createBrowserRouter
+const router = createHashRouter([
   {
     path: '/',
     element: <MainLayout />,
@@ -85,9 +86,7 @@ const router = createBrowserRouter([
       },
     ],
   },
-], {
-  basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/',
-})
+])
 
 function App() {
   const [showSplash, setShowSplash] = useState(true)
