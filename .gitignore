@@ -1,0 +1,6 @@
+# Repo root (paths under user_frontend/)
+user_frontend/node_modules/
+user_frontend/dist/
+user_frontend/.vite/
+user_frontend/.env
+user_frontend/.env.local

@@ -57,14 +57,28 @@ export const AuthProvider = ({ children }) => {
       const formData = new FormData()
       formData.append('image', file)
       const data = await api.user.updateProfileImage(formData)
-      const merged = { ...user, ...data.user }
+      const nextUser = data.user || user
+      const merged = {
+        ...user,
+        ...nextUser,
+        profileImage: data.image ?? nextUser.profileImage ?? user?.profileImage,
+      }
       localStorage.setItem(USER_KEY, JSON.stringify(merged))
       setUser(merged)
       return merged
     },
     updateProfile: async (payload) => {
       const data = await api.user.updateProfile(payload)
-      const merged = { ...user, ...data.user }
+      const updated = data.user ?? data
+      const merged = {
+        ...user,
+        ...updated,
+        name: updated.name ?? user?.name,
+        email: updated.email ?? user?.email,
+        phone: updated.phone ?? user?.phone,
+        role: updated.role ?? user?.role,
+        _id: updated._id ?? user?._id,
+      }
       localStorage.setItem(USER_KEY, JSON.stringify(merged))
       setUser(merged)
       return merged

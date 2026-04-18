@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024
@@ -21,6 +21,12 @@ const ProfileInfoSection = () => {
       `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=E5E7EB&color=111827`,
     [preview, user?.name, user?.profileImage]
   )
+
+  useEffect(() => {
+    if (editing) return
+    setName(user?.name || '')
+    setPhone(user?.phone || '')
+  }, [user?.name, user?.phone, editing])
 
   const handleFileChange = (event) => {
     setError('')

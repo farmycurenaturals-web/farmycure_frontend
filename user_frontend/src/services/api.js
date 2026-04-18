@@ -1,10 +1,11 @@
-const API = import.meta.env.VITE_API_URL;
+const rawApiUrl = (import.meta.env.VITE_API_URL || '').trim();
+const API = rawApiUrl ? (rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl) : '';
 
 if (import.meta.env.DEV) {
   console.log('API URL:', API);
 }
 
-const BASE_URL = `${API}/api`;
+const BASE_URL = API ? `${API}/api` : '/api';
 
 const getAuthToken = () => localStorage.getItem('farmycure_token');
 const getRefreshToken = () => localStorage.getItem('farmycure_refresh_token');

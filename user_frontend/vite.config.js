@@ -9,6 +9,16 @@ export default defineConfig({
     strictPort: true,
     host: true,
     allowedHosts: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/uploads': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
     port: 5173,
