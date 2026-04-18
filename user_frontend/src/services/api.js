@@ -72,9 +72,57 @@ const request = async (path, options = {}) => {
   return handleResponse(response);
 };
 
+const requestWithMeta = async (path, options = {}) => {
+  let response = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers: buildHeaders(options.headers, options.body)
+  });
+  if (response.status === 401 && !String(path).includes('/auth/')) {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      const refreshRes = await fetch(`${BASE_URL}/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      });
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json();
+        if (refreshData.accessToken) {
+          setAccessToken(refreshData.accessToken);
+          response = await fetch(`${BASE_URL}${path}`, {
+            ...options,
+            headers: buildHeaders(options.headers, options.body)
+          });
+        }
+      }
+    }
+  }
+  const data = await handleResponse(response);
+  return { data, headers: response.headers, status: response.status };
+};
+
 export const api = {
   products: {
     list: (category) => request(`/products${category ? `?category=${encodeURIComponent(category)}` : ''}`),
+    listPaged: async ({ page = 1, limit = 8, sortBy = 'createdAt', order = 'desc', category = null } = {}) => {
+      const query = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+        sortBy: String(sortBy),
+        order: String(order),
+      });
+      if (category) query.set('category', category);
+      const { data, headers } = await requestWithMeta(`/products?${query.toString()}`);
+      return {
+        items: Array.isArray(data) ? data : [],
+        pagination: {
+          total: Number(headers.get('X-Total-Count') || 0),
+          page: Number(headers.get('X-Page') || page),
+          limit: Number(headers.get('X-Limit') || limit),
+          totalPages: Number(headers.get('X-Total-Pages') || 1),
+        },
+      };
+    },
     featured: (limit = 8) => request(`/products/featured?limit=${encodeURIComponent(limit)}`),
     getById: (id) => request(`/products/${id}`)
   },

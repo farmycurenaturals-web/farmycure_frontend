@@ -20,8 +20,8 @@ export function getContactConfig() {
 
   const email = env.VITE_CONTACT_EMAIL || 'support@farmycure.com'
 
-  const instagramUrl = env.VITE_CONTACT_INSTAGRAM_URL || 'https://www.instagram.com/'
-  const linkedInUrl = env.VITE_CONTACT_LINKEDIN_URL || 'https://www.linkedin.com/'
+  const instagramUrl = env.VITE_CONTACT_INSTAGRAM_URL || 'https://www.instagram.com/farmycure_naturals/'
+  const linkedInUrl = env.VITE_CONTACT_LINKEDIN_URL || 'https://www.linkedin.com/in/farmycure-naturals-aa4774403'
 
   const socialLinks = [
     { label: 'Instagram', url: instagramUrl },

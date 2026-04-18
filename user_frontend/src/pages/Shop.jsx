@@ -43,6 +43,10 @@ const Shop = () => {
   const [isBuyNow, setIsBuyNow] = useState(false)
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [loadingProducts, setLoadingProducts] = useState(false)
   const [current, setCurrent] = useState(0)
 
   useEffect(() => {
@@ -59,29 +63,55 @@ const Shop = () => {
     ? activeCategory
     : null
 
-  const filteredProducts = useMemo(() => {
-    if (!effectiveCategory) return products
-    return products.filter((p) => p.category === effectiveCategory)
-  }, [effectiveCategory, products])
-
   useEffect(() => {
-    const loadInitialData = async () => {
+    const loadCategories = async () => {
       try {
-        const [productsData, categoriesData] = await Promise.all([
-          api.products.list(),
-          api.categories.list()
-        ])
-        setProducts(productsData)
+        const categoriesData = await api.categories.list()
         setCategories(categoriesData)
       } catch {
-        setProducts([])
         setCategories([])
       }
     }
-    loadInitialData()
+    loadCategories()
   }, [])
 
+  useEffect(() => {
+    setPage(1)
+  }, [effectiveCategory])
+
+  useEffect(() => {
+    if (activeCategory && categories.length > 0 && !isValidCategory(activeCategory)) {
+      setSearchParams({})
+      return
+    }
+
+    const loadProducts = async () => {
+      try {
+        setLoadingProducts(true)
+        const { items, pagination } = await api.products.listPaged({
+          page,
+          limit: 8,
+          sortBy: 'createdAt',
+          order: 'desc',
+          category: effectiveCategory,
+        })
+        setProducts(items)
+        setTotalPages(Math.max(1, Number(pagination?.totalPages) || 1))
+        setTotalCount(Number(pagination?.total) || items.length)
+      } catch {
+        setProducts([])
+        setTotalPages(1)
+        setTotalCount(0)
+      } finally {
+        setLoadingProducts(false)
+      }
+    }
+
+    loadProducts()
+  }, [activeCategory, categories, effectiveCategory, page, setSearchParams])
+
   const handleCategoryChange = (categoryId) => {
+    setPage(1)
     if (categoryId) {
       setSearchParams({ category: categoryId })
     } else {
@@ -106,6 +136,24 @@ const Shop = () => {
   const activeCategoryName = effectiveCategory
     ? categories.find((c) => (c.categoryCode || c.slug) === effectiveCategory)?.name
     : 'All Products'
+
+  const visiblePages = useMemo(() => {
+    if (totalPages <= 1) return []
+    const pages = []
+    const start = Math.max(1, page - 2)
+    const end = Math.min(totalPages, page + 2)
+
+    if (start > 1) {
+      pages.push(1)
+      if (start > 2) pages.push('...')
+    }
+    for (let p = start; p <= end; p += 1) pages.push(p)
+    if (end < totalPages) {
+      if (end < totalPages - 1) pages.push('...')
+      pages.push(totalPages)
+    }
+    return pages
+  }, [page, totalPages])
 
   return (
     <main className="py-10 md:py-16 bg-background min-h-[60vh]">
@@ -238,22 +286,24 @@ const Shop = () => {
             {/* Results count */}
             <div className="flex items-center justify-between mb-6">
               <p className="font-body text-sm text-gray-500">
-                Showing {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+                Showing {products.length} product{products.length !== 1 ? 's' : ''} of {totalCount}
                 {effectiveCategory && (
                   <> in <span className="font-medium text-forest">{activeCategoryName}</span></>
                 )}
               </p>
             </div>
 
-            {filteredProducts.length > 0 ? (
+            {loadingProducts ? (
+              <div className="text-center py-16 text-gray-500">Loading products...</div>
+            ) : products.length > 0 ? (
               <motion.div
                 variants={staggerContainer}
                 initial="hidden"
                 animate="visible"
-                key={effectiveCategory || 'all'}
+                key={`${effectiveCategory || 'all'}-${page}`}
                 className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
               >
-                {filteredProducts.map((product) => (
+                {products.map((product) => (
                   <motion.div key={product._id} variants={fadeInUp}>
                     <ShopProductCard product={product} onOpenModal={openProductModal} />
                   </motion.div>
@@ -268,6 +318,52 @@ const Shop = () => {
                 <p className="font-body text-gray-500">
                   Try selecting a different category.
                 </p>
+              </div>
+            )}
+
+            {!loadingProducts && totalPages > 1 && (
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-gray-600">
+                  Page {page} of {totalPages}
+                </span>
+                <div className="flex items-center gap-1 mx-1">
+                  {visiblePages.map((p, idx) =>
+                    p === '...' ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={`page-${p}`}
+                        type="button"
+                        onClick={() => setPage(Number(p))}
+                        className={`min-w-9 h-9 px-2 rounded-lg text-sm border transition ${
+                          Number(p) === page
+                            ? 'bg-[#1f4d36] text-white border-[#1f4d36]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Next
+                </button>
               </div>
             )}
         </div>

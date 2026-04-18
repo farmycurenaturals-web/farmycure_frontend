@@ -29,13 +29,15 @@ export const footerLinks = {
 }
 
 export const socialLinks = [
-  { name: 'Facebook', url: 'https://facebook.com', icon: 'facebook' },
-  { name: 'Instagram', url: 'https://instagram.com', icon: 'instagram' },
-  { name: 'Twitter', url: 'https://twitter.com', icon: 'twitter' },
+  { name: 'Instagram', url: 'https://www.instagram.com/farmycure_naturals/', icon: 'instagram' },
+  { name: 'Facebook', url: 'https://www.facebook.com/profile.php?id=61572114608238', icon: 'facebook' },
+  { name: 'LinkedIn', url: 'https://www.linkedin.com/in/farmycure-naturals-aa4774403', icon: 'linkedin' },
+  { name: 'X', url: 'https://x.com/farmycure', icon: 'x' },
+  { name: 'WhatsApp', url: 'https://wa.me/919793180013', icon: 'whatsapp' },
 ]
 
 export const contactInfo = {
   email: 'hello@farmycure.com',
-  phone: '+91 98765 43210',
+  phone: '+91 97931 80013',
   address: '123 Organic Farm Road, Green Valley, Karnataka 560001',
 }
