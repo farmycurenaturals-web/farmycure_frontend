@@ -15,6 +15,30 @@ const OrdersSection = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [downloadingOrderId, setDownloadingOrderId] = useState('')
+
+  const handleDownloadInvoice = async (orderId) => {
+    try {
+      setDownloadingOrderId(orderId)
+      const { blob, headers } = await api.orders.getInvoice(orderId)
+      const objectUrl = window.URL.createObjectURL(blob)
+      const contentDisposition = headers.get('content-disposition') || ''
+      const nameMatch = contentDisposition.match(/filename="?([^"]+)"?/)
+      const fileName = nameMatch?.[1] || `invoice-${orderId}.pdf`
+
+      const anchor = document.createElement('a')
+      anchor.href = objectUrl
+      anchor.download = fileName
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      window.URL.revokeObjectURL(objectUrl)
+    } catch (e) {
+      setError(e.message || 'Failed to download invoice')
+    } finally {
+      setDownloadingOrderId('')
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -80,6 +104,14 @@ const OrdersSection = () => {
                 className="text-sm text-[#1f4d36] underline font-medium"
               >
                 Track Order
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDownloadInvoice(order._id)}
+                disabled={downloadingOrderId === order._id}
+                className="text-sm text-[#1f4d36] underline font-medium disabled:text-gray-400 disabled:no-underline"
+              >
+                {downloadingOrderId === order._id ? 'Downloading...' : 'Download Invoice'}
               </button>
             </div>
           </div>

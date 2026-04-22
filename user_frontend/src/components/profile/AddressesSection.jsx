@@ -70,11 +70,11 @@ const AddressesSection = () => {
   }
 
   const onDelete = async (id) => {
-    if (!window.confirm('Delete this address?')) return
+    if (!window.confirm('Are you sure you want to delete?')) return
     setError('')
     try {
       await api.user.deleteAddress(id)
-      await load()
+      setList((prev) => prev.filter((item) => item._id !== id))
       if (editingId === id) resetForm()
     } catch (err) {
       setError(err.message || 'Delete failed')

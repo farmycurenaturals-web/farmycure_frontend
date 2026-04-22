@@ -101,6 +101,39 @@ const requestWithMeta = async (path, options = {}) => {
   return { data, headers: response.headers, status: response.status };
 };
 
+const requestBlob = async (path, options = {}) => {
+  let response = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers: buildHeaders(options.headers, options.body)
+  });
+  if (response.status === 401 && !String(path).includes('/auth/')) {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      const refreshRes = await fetch(`${BASE_URL}/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      });
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json();
+        if (refreshData.accessToken) {
+          setAccessToken(refreshData.accessToken);
+          response = await fetch(`${BASE_URL}${path}`, {
+            ...options,
+            headers: buildHeaders(options.headers, options.body)
+          });
+        }
+      }
+    }
+  }
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Request failed' }));
+    throw new Error(error.message || 'Something went wrong');
+  }
+  const blob = await response.blob();
+  return { blob, headers: response.headers };
+};
+
 export const api = {
   products: {
     list: (category) => request(`/products${category ? `?category=${encodeURIComponent(category)}` : ''}`),
@@ -145,18 +178,30 @@ export const api = {
   },
   orders: {
     create: (payload) => request('/orders', { method: 'POST', body: JSON.stringify(payload) }),
-    getById: (id) => request(`/orders/${id}`)
+    getById: (id) => request(`/orders/${id}`),
+    getInvoice: (id) => requestBlob(`/orders/${id}/invoice`)
   },
   auth: {
     register: (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
     login: (payload) => request('/auth/login', { method: 'POST', body: JSON.stringify(payload) }),
+    googleLogin: (payload) => request('/auth/google-login', { method: 'POST', body: JSON.stringify(payload) }),
+    sendOtp: (payload) => request('/auth/send-otp', { method: 'POST', body: JSON.stringify(payload) }),
+    verifyOtp: (payload) => request('/auth/verify-otp', { method: 'POST', body: JSON.stringify(payload) }),
     logout: (refreshToken) => request('/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
     forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+    validateResetToken: (resetToken) =>
+      request('/auth/validate-reset-token', { method: 'POST', body: JSON.stringify({ resetToken }) }),
     resetPassword: (resetToken, newPassword) =>
       request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ resetToken, newPassword }) })
   },
   contact: {
     submit: (payload) => request('/contact', { method: 'POST', body: JSON.stringify(payload) }),
+  },
+  address: {
+    list: () => request('/address'),
+    save: (payload) => request('/address', { method: 'POST', body: JSON.stringify(payload) }),
+    delete: (id) => request(`/address/${id}`, { method: 'DELETE' }),
+    setDefault: (id) => request(`/address/${id}/default`, { method: 'PATCH' }),
   },
   user: {
     updateProfileImage: (formData) => request('/user/profile-image', { method: 'PUT', body: formData }),

@@ -26,6 +26,24 @@ export const AuthProvider = ({ children }) => {
     return data
   }
 
+  const loginWithGoogle = async (credential) => {
+    const data = await api.auth.googleLogin({ credential })
+    localStorage.setItem(TOKEN_KEY, data.token)
+    localStorage.setItem(REFRESH_KEY, data.refreshToken)
+    localStorage.setItem(USER_KEY, JSON.stringify(data))
+    setUser(data)
+    return data
+  }
+
+  const loginWithOtp = async ({ email, otp, purpose = 'login' }) => {
+    const data = await api.auth.verifyOtp({ email, otp, purpose })
+    localStorage.setItem(TOKEN_KEY, data.token)
+    localStorage.setItem(REFRESH_KEY, data.refreshToken)
+    localStorage.setItem(USER_KEY, JSON.stringify(data))
+    setUser(data)
+    return data
+  }
+
   const register = async (payload) => {
     const data = await api.auth.register(payload)
     localStorage.setItem(TOKEN_KEY, data.token)
@@ -50,6 +68,8 @@ export const AuthProvider = ({ children }) => {
     user,
     isAuthenticated: Boolean(user),
     login,
+    loginWithGoogle,
+    loginWithOtp,
     register,
     logout,
     setUser,

@@ -40,6 +40,7 @@ const OrderTracking = () => {
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -98,6 +99,29 @@ const OrderTracking = () => {
   const isCancelled = statusNorm === 'Cancelled'
   const statusIndex = STEPS.indexOf(statusNorm)
   const effectiveIndex = isCancelled ? -1 : (statusIndex >= 0 ? statusIndex : 0)
+  const handleDownloadInvoice = async () => {
+    if (!order?._id) return
+    try {
+      setDownloading(true)
+      const { blob, headers } = await api.orders.getInvoice(order._id)
+      const objectUrl = window.URL.createObjectURL(blob)
+      const contentDisposition = headers.get('content-disposition') || ''
+      const nameMatch = contentDisposition.match(/filename="?([^"]+)"?/)
+      const fileName = nameMatch?.[1] || `invoice-${order._id}.pdf`
+
+      const anchor = document.createElement('a')
+      anchor.href = objectUrl
+      anchor.download = fileName
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      window.URL.revokeObjectURL(objectUrl)
+    } catch (e) {
+      setError(e.message || 'Failed to download invoice')
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   return (
     <main className="py-10 md:py-14 min-h-[70vh] bg-background">
@@ -109,6 +133,14 @@ const OrderTracking = () => {
             </Link>
             <h1 className="font-heading text-2xl font-bold text-text-primary mt-2">Track order</h1>
             <p className="text-sm text-gray-500 mt-1 font-mono">ID · {String(order._id).slice(-12)}</p>
+            <button
+              type="button"
+              onClick={handleDownloadInvoice}
+              disabled={downloading}
+              className="mt-3 text-sm text-[#1f4d36] underline font-medium disabled:text-gray-400 disabled:no-underline"
+            >
+              {downloading ? 'Downloading...' : 'Download Invoice'}
+            </button>
           </div>
 
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 md:p-8">

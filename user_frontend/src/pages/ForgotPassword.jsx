@@ -7,6 +7,7 @@ import { api } from '../services/api'
 const ForgotPassword = () => {
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
+  const [expiryNote, setExpiryNote] = useState('')
   const [devResetLink, setDevResetLink] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,12 +16,16 @@ const ForgotPassword = () => {
     e.preventDefault()
     setError('')
     setMessage('')
+    setExpiryNote('')
     setDevResetLink('')
     setLoading(true)
     try {
       const normalized = email.trim().toLowerCase()
       const res = await api.auth.forgotPassword(normalized)
       setMessage(res.message || 'If email exists, reset link is sent.')
+      if (res.expiresInMinutes) {
+        setExpiryNote(`The reset link expires in ${res.expiresInMinutes} minutes.`)
+      }
       if (res.resetLink && !res.emailDelivery) {
         setDevResetLink(res.resetLink)
       }
@@ -38,6 +43,7 @@ const ForgotPassword = () => {
           <h1 className="font-heading text-2xl font-bold text-text-primary mb-2">Forgot Password</h1>
           <p className="text-sm text-gray-500 mb-6">Enter your account email to get a reset link.</p>
           {message && <p className="text-sm text-green-700 mb-4">{message}</p>}
+          {expiryNote && <p className="text-xs text-gray-500 mb-4">{expiryNote}</p>}
           {devResetLink && (
             <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-100 text-sm text-amber-950">
               <p className="font-medium mb-2">Email not configured — use this link (dev only):</p>

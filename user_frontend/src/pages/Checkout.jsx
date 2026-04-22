@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Container } from '../components/ui/Container'
@@ -87,6 +87,39 @@ const Checkout = () => {
 
   const [errors, setErrors] = useState({})
   const [isProcessing, setIsProcessing] = useState(false)
+  const [savedAddresses, setSavedAddresses] = useState([])
+  const [selectedAddressId, setSelectedAddressId] = useState('')
+  const [saveThisAddress, setSaveThisAddress] = useState(false)
+  const [setAsDefault, setSetAsDefault] = useState(false)
+  const [addressStatus, setAddressStatus] = useState('')
+
+  const applyAddressToForm = (address) => {
+    if (!address) return
+    setFormData((prev) => ({
+      ...prev,
+      fullName: address.name || prev.fullName,
+      phone: address.phone || prev.phone,
+      address: address.address || prev.address,
+      city: address.city || prev.city,
+      state: address.state || prev.state,
+      pincode: address.pincode || prev.pincode,
+    }))
+  }
+
+  const loadSavedAddresses = useCallback(async () => {
+    try {
+      const data = await api.address.list()
+      const list = Array.isArray(data) ? data : []
+      setSavedAddresses(list)
+      if (list.length > 0) {
+        const defaultAddress = list.find((item) => item.isDefault) || list[0]
+        setSelectedAddressId(defaultAddress._id)
+        applyAddressToForm(defaultAddress)
+      }
+    } catch {
+      setSavedAddresses([])
+    }
+  }, [])
 
   useEffect(() => {
     if (items.length === 0) {
@@ -94,11 +127,67 @@ const Checkout = () => {
     }
   }, [items, navigate])
 
+  useEffect(() => {
+    loadSavedAddresses()
+  }, [loadSavedAddresses])
+
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }))
+    }
+  }
+
+  const handleAddressSelect = (e) => {
+    const nextId = e.target.value
+    setSelectedAddressId(nextId)
+    setAddressStatus('')
+    if (!nextId) return
+    const selected = savedAddresses.find((item) => item._id === nextId)
+    if (selected) {
+      applyAddressToForm(selected)
+      setSetAsDefault(Boolean(selected.isDefault))
+    }
+  }
+
+  const handleSetDefault = async () => {
+    if (!selectedAddressId) return
+    try {
+      const updated = await api.address.setDefault(selectedAddressId)
+      setSavedAddresses((prev) =>
+        prev.map((item) => ({
+          ...item,
+          isDefault: item._id === updated._id,
+        }))
+      )
+      setSetAsDefault(true)
+      setAddressStatus('Selected address set as default.')
+    } catch (error) {
+      setAddressStatus(error.message || 'Unable to set default address.')
+    }
+  }
+
+  const handleDeleteSavedAddress = async () => {
+    if (!selectedAddressId) return
+    if (!window.confirm('Are you sure you want to delete?')) return
+    setAddressStatus('')
+    try {
+      await api.address.delete(selectedAddressId)
+      setSavedAddresses((prev) => {
+        const next = prev.filter((item) => item._id !== selectedAddressId)
+        const fallback = next.find((item) => item.isDefault) || next[0]
+        setSelectedAddressId(fallback?._id || '')
+        if (fallback) {
+          applyAddressToForm(fallback)
+        } else {
+          setSetAsDefault(false)
+        }
+        return next
+      })
+      setAddressStatus('Address deleted successfully.')
+    } catch (error) {
+      setAddressStatus(error.message || 'Unable to delete address.')
     }
   }
 
@@ -202,6 +291,25 @@ const Checkout = () => {
       handler: async function (response) {
         try {
           await api.payments.verifySignature(response)
+          if (saveThisAddress) {
+            try {
+              const saved = await api.address.save({
+                name: formData.fullName,
+                phone: formData.phone,
+                address: formData.address,
+                city: formData.city,
+                state: formData.state,
+                pincode: formData.pincode,
+                isDefault: setAsDefault,
+              })
+              if (saved?._id) {
+                setSelectedAddressId(saved._id)
+                await loadSavedAddresses()
+              }
+            } catch {
+              // Saving address is optional; order flow should continue.
+            }
+          }
           const orderPayload = {
             shippingAddress: formData,
             items: items.map((item) => ({
@@ -302,6 +410,40 @@ const Checkout = () => {
               </h2>
 
               <div className="space-y-5">
+                {savedAddresses.length > 0 && (
+                  <div className="space-y-2">
+                    <label htmlFor="savedAddress" className="block font-body text-sm font-medium text-text-primary">
+                      Saved Addresses
+                    </label>
+                    <div className="flex flex-col md:flex-row gap-3">
+                      <select
+                        id="savedAddress"
+                        value={selectedAddressId}
+                        onChange={handleAddressSelect}
+                        className="w-full md:flex-1 px-4 py-3 font-body border border-gray-200 rounded-card transition-colors focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest"
+                      >
+                        {savedAddresses.map((item) => (
+                          <option key={item._id} value={item._id}>
+                            {item.name} · {item.city} ({item.pincode}){item.isDefault ? ' - Default' : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <Button type="button" variant="outline" onClick={handleSetDefault} className="md:w-auto">
+                        Set Default
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleDeleteSavedAddress}
+                        className="md:w-auto border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                    {addressStatus && <p className="text-xs text-gray-600">{addressStatus}</p>}
+                  </div>
+                )}
+
                 <InputField
                   label="Full Name"
                   name="fullName"
@@ -369,6 +511,29 @@ const Checkout = () => {
                     error={errors.pincode}
                     placeholder="123456"
                   />
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={saveThisAddress}
+                      onChange={(e) => setSaveThisAddress(e.target.checked)}
+                      className="rounded border-gray-300 text-forest focus:ring-forest/30"
+                    />
+                    Save this address
+                  </label>
+                  {saveThisAddress && (
+                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={setAsDefault}
+                        onChange={(e) => setSetAsDefault(e.target.checked)}
+                        className="rounded border-gray-300 text-forest focus:ring-forest/30"
+                      />
+                      Set as default address
+                    </label>
+                  )}
                 </div>
               </div>
             </div>
