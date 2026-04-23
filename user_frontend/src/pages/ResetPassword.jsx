@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Container } from '../components/ui/Container'
 import { Button } from '../components/ui/Button'
 import { api } from '../services/api'
 
 const ResetPassword = () => {
+  const navigate = useNavigate()
   const { token: tokenFromPath = '' } = useParams()
   const [searchParams] = useSearchParams()
   const tokenFromUrl = useMemo(() => searchParams.get('token') || '', [searchParams])
   const [token] = useState(tokenFromPath || tokenFromUrl)
   const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -50,11 +52,25 @@ const ResetPassword = () => {
     e.preventDefault()
     setError('')
     setMessage('')
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
     setLoading(true)
     try {
-      const res = await api.auth.resetPassword(token, newPassword)
+      const res = await api.auth.resetPassword(token, newPassword.trim())
       setMessage(res.message || 'Password reset successful.')
       setNewPassword('')
+      setConfirmPassword('')
+      setTokenValid(false)
+      navigate('/login', {
+        replace: true,
+        state: { message: 'Password updated. Please login with your new password.' },
+      })
     } catch (err) {
       setError(err.message || 'Password reset failed')
     } finally {
@@ -79,6 +95,15 @@ const ResetPassword = () => {
                 placeholder="New password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full border border-gray-200 rounded-card px-4 py-3"
+                minLength={6}
+                required
+              />
+              <input
+                type="password"
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full border border-gray-200 rounded-card px-4 py-3"
                 minLength={6}
                 required

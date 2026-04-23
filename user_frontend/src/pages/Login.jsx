@@ -1,10 +1,30 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google'
 import { Container } from '../components/ui/Container'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../services/api'
+
+const GoogleConsentButton = ({ onSuccess, onError, disabled }) => {
+  const googleLogin = useGoogleLogin({
+    scope: 'openid email profile',
+    prompt: 'consent select_account',
+    onSuccess,
+    onError,
+  })
+
+  return (
+    <button
+      type="button"
+      onClick={() => googleLogin()}
+      disabled={disabled}
+      className="w-full border border-gray-300 rounded-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70"
+    >
+      Continue with Google
+    </button>
+  )
+}
 
 const Login = () => {
   const navigate = useNavigate()
@@ -127,18 +147,18 @@ const Login = () => {
   }, [otpCooldown])
 
   const handleGoogleSuccess = async (response) => {
-    if (!response?.credential) {
+    if (!response?.access_token) {
       setError('Google login failed. Please try again.')
       return
     }
     if (isDev) {
-      setGoogleDebugToken(response.credential)
+      setGoogleDebugToken(response.access_token)
     }
     setGoogleLoading(true)
     setError('')
     setSuccess('')
     try {
-      await loginWithGoogle(response.credential)
+      await loginWithGoogle({ accessToken: response.access_token })
       navigateAfterLogin()
     } catch (err) {
       setError(err.message || 'Google authentication failed')
@@ -284,12 +304,10 @@ const Login = () => {
             {googleClientId ? (
               <GoogleOAuthProvider clientId={googleClientId}>
                 <div className="flex justify-center">
-                  <GoogleLogin
+                  <GoogleConsentButton
                     onSuccess={handleGoogleSuccess}
                     onError={() => setError('Google authentication failed')}
-                    text="continue_with"
-                    shape="pill"
-                    width="300"
+                    disabled={googleLoading}
                   />
                 </div>
               </GoogleOAuthProvider>

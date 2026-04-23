@@ -89,6 +89,7 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [savedAddresses, setSavedAddresses] = useState([])
   const [selectedAddressId, setSelectedAddressId] = useState('')
+  const [useSavedAddress, setUseSavedAddress] = useState(false)
   const [saveThisAddress, setSaveThisAddress] = useState(false)
   const [setAsDefault, setSetAsDefault] = useState(false)
   const [addressStatus, setAddressStatus] = useState('')
@@ -114,7 +115,6 @@ const Checkout = () => {
       if (list.length > 0) {
         const defaultAddress = list.find((item) => item.isDefault) || list[0]
         setSelectedAddressId(defaultAddress._id)
-        applyAddressToForm(defaultAddress)
       }
     } catch {
       setSavedAddresses([])
@@ -146,9 +146,51 @@ const Checkout = () => {
     if (!nextId) return
     const selected = savedAddresses.find((item) => item._id === nextId)
     if (selected) {
-      applyAddressToForm(selected)
+      if (useSavedAddress) {
+        applyAddressToForm(selected)
+      }
       setSetAsDefault(Boolean(selected.isDefault))
     }
+  }
+
+  const handleUseSavedAddressToggle = (checked) => {
+    setUseSavedAddress(checked)
+    setAddressStatus('')
+    if (checked) {
+      const selected = savedAddresses.find((item) => item._id === selectedAddressId) || savedAddresses[0]
+      if (selected) {
+        setSelectedAddressId(selected._id)
+        applyAddressToForm(selected)
+        setSetAsDefault(Boolean(selected.isDefault))
+      }
+    }
+  }
+
+  const handleUseSavedAddressClick = async () => {
+    setAddressStatus('')
+    let currentList = savedAddresses
+    if (!currentList.length) {
+      try {
+        const data = await api.address.list()
+        currentList = Array.isArray(data) ? data : []
+        setSavedAddresses(currentList)
+      } catch (error) {
+        setAddressStatus(error.message || 'Unable to load saved addresses.')
+        return
+      }
+    }
+
+    if (!currentList.length) {
+      setUseSavedAddress(false)
+      setAddressStatus('No saved address found in profile. Please add one first.')
+      return
+    }
+
+    const selected = currentList.find((item) => item._id === selectedAddressId)
+      || currentList.find((item) => item.isDefault)
+      || currentList[0]
+    setSelectedAddressId(selected._id)
+    handleUseSavedAddressToggle(true)
   }
 
   const handleSetDefault = async () => {
@@ -410,11 +452,28 @@ const Checkout = () => {
               </h2>
 
               <div className="space-y-5">
-                {savedAddresses.length > 0 && (
-                  <div className="space-y-2">
-                    <label htmlFor="savedAddress" className="block font-body text-sm font-medium text-text-primary">
-                      Saved Addresses
-                    </label>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant={useSavedAddress ? 'primary' : 'outline'}
+                      onClick={handleUseSavedAddressClick}
+                      className="md:w-auto"
+                    >
+                      Use Saved Address
+                    </Button>
+                    {useSavedAddress && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleUseSavedAddressToggle(false)}
+                        className="md:w-auto"
+                      >
+                        Enter Manually
+                      </Button>
+                    )}
+                  </div>
+                  {useSavedAddress && savedAddresses.length > 0 && (
                     <div className="flex flex-col md:flex-row gap-3">
                       <select
                         id="savedAddress"
@@ -440,9 +499,9 @@ const Checkout = () => {
                         Delete
                       </Button>
                     </div>
-                    {addressStatus && <p className="text-xs text-gray-600">{addressStatus}</p>}
-                  </div>
-                )}
+                  )}
+                  {addressStatus && <p className="text-xs text-gray-600">{addressStatus}</p>}
+                </div>
 
                 <InputField
                   label="Full Name"

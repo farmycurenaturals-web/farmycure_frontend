@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../services/api'
 
-const emptyForm = { name: '', phone: '', address: '', city: '', pincode: '' }
+const emptyForm = { name: '', phone: '', address: '', city: '', state: '', pincode: '' }
 
 const AddressesSection = () => {
   const [list, setList] = useState([])
@@ -65,6 +65,7 @@ const AddressesSection = () => {
       phone: addr.phone || '',
       address: addr.address || '',
       city: addr.city || '',
+        state: addr.state || '',
       pincode: addr.pincode || ''
     })
   }
@@ -120,12 +121,19 @@ const AddressesSection = () => {
           onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
           className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
         />
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-3 gap-3">
           <input
             required
             placeholder="City"
             value={form.city}
             onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          />
+          <input
+            required
+            placeholder="State"
+            value={form.state}
+            onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
           />
           <input
@@ -167,7 +175,7 @@ const AddressesSection = () => {
               <p className="font-medium text-gray-900">{a.name}</p>
               <p className="text-gray-600">{a.phone}</p>
               <p className="text-gray-700">
-                {a.address}, {a.city} — {a.pincode}
+                {a.address}, {a.city}, {a.state} - {a.pincode}
               </p>
             </div>
             <div className="flex gap-2 shrink-0">

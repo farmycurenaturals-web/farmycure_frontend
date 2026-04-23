@@ -26,8 +26,10 @@ export const AuthProvider = ({ children }) => {
     return data
   }
 
-  const loginWithGoogle = async (credential) => {
-    const data = await api.auth.googleLogin({ credential })
+  const loginWithGoogle = async ({ credential, accessToken } = {}) => {
+    const data = accessToken
+      ? await api.auth.googleTokenLogin({ accessToken })
+      : await api.auth.googleLogin({ credential })
     localStorage.setItem(TOKEN_KEY, data.token)
     localStorage.setItem(REFRESH_KEY, data.refreshToken)
     localStorage.setItem(USER_KEY, JSON.stringify(data))
