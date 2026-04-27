@@ -87,6 +87,7 @@ const Checkout = () => {
 
   const [errors, setErrors] = useState({})
   const [isProcessing, setIsProcessing] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState('online')
   const [savedAddresses, setSavedAddresses] = useState([])
   const [selectedAddressId, setSelectedAddressId] = useState('')
   const [useSavedAddress, setUseSavedAddress] = useState(false)
@@ -292,6 +293,56 @@ const Checkout = () => {
 
     setIsProcessing(true)
 
+    const saveAddressIfNeeded = async () => {
+      if (!saveThisAddress) return
+      try {
+        const saved = await api.address.save({
+          name: formData.fullName,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+          isDefault: setAsDefault,
+        })
+        if (saved?._id) {
+          setSelectedAddressId(saved._id)
+          await loadSavedAddresses()
+        }
+      } catch {
+        // Saving address is optional; order flow should continue.
+      }
+    }
+
+    const createOrderFromCart = async (razorpayPayload = undefined) => {
+      const orderPayload = {
+        shippingAddress: formData,
+        paymentMethod,
+        ...(razorpayPayload ? { razorpay: razorpayPayload } : {}),
+      }
+      return api.orders.create(orderPayload)
+    }
+
+    if (paymentMethod === 'cod') {
+      try {
+        await saveAddressIfNeeded()
+        const order = await createOrderFromCart()
+        clearCart()
+        navigate('/order-success', {
+          state: {
+            orderId: order._id,
+            paymentId: 'COD',
+            totalAmount: totalPrice,
+          }
+        })
+        return
+      } catch (error) {
+        alert(error?.message || 'Unable to place COD order. Please try again.')
+        setIsProcessing(false)
+        return
+      }
+    }
+
     if (!RAZORPAY_KEY) {
       alert('Payment is not configured (missing VITE_RAZORPAY_KEY_ID). Please contact support.')
       setIsProcessing(false)
@@ -333,44 +384,12 @@ const Checkout = () => {
       handler: async function (response) {
         try {
           await api.payments.verifySignature(response)
-          if (saveThisAddress) {
-            try {
-              const saved = await api.address.save({
-                name: formData.fullName,
-                phone: formData.phone,
-                address: formData.address,
-                city: formData.city,
-                state: formData.state,
-                pincode: formData.pincode,
-                isDefault: setAsDefault,
-              })
-              if (saved?._id) {
-                setSelectedAddressId(saved._id)
-                await loadSavedAddresses()
-              }
-            } catch {
-              // Saving address is optional; order flow should continue.
-            }
-          }
-          const orderPayload = {
-            shippingAddress: formData,
-            items: items.map((item) => ({
-              productId: item.product.id,
-              variant: item.product.selectedVariant || 'default',
-              quantity: item.quantity,
-              price: item.product.price,
-              title: item.product.title,
-              image: item.product.image,
-              category: item.product.category
-            })),
-            totalPrice,
-            razorpay: {
-              orderId: response.razorpay_order_id,
-              paymentId: response.razorpay_payment_id,
-              signature: response.razorpay_signature
-            }
-          }
-          const order = await api.orders.create(orderPayload)
+          await saveAddressIfNeeded()
+          const order = await createOrderFromCart({
+            orderId: response.razorpay_order_id,
+            paymentId: response.razorpay_payment_id,
+            signature: response.razorpay_signature
+          })
           clearCart()
           navigate('/order-success', {
             state: {
@@ -639,6 +658,34 @@ const Checkout = () => {
                 </div>
               </div>
 
+              <div className="mt-5 rounded-card border border-gray-200 p-3">
+                <p className="font-body text-sm font-medium text-text-primary mb-2">Payment Method</p>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="online"
+                      checked={paymentMethod === 'online'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="text-forest focus:ring-forest/30"
+                    />
+                    Online Payment (Razorpay)
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="text-forest focus:ring-forest/30"
+                    />
+                    Cash on Delivery
+                  </label>
+                </div>
+              </div>
+
               {/* Place Order Button */}
               <Button
                 variant="primary"
@@ -656,7 +703,7 @@ const Checkout = () => {
                     Processing...
                   </span>
                 ) : (
-                  'Place Order'
+                  paymentMethod === 'cod' ? 'Place COD Order' : 'Place Order'
                 )}
               </Button>
 
@@ -666,7 +713,7 @@ const Checkout = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
                 <span className="font-body text-xs text-gray-500">
-                  Secure payment powered by Razorpay
+                  {paymentMethod === 'cod' ? 'Pay with cash at delivery' : 'Secure payment powered by Razorpay'}
                 </span>
               </div>
             </div>

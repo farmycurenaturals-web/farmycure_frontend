@@ -10,6 +10,8 @@ const itemImage = (item) => {
   return ''
 }
 
+const getOrderStatus = (order) => String(order?.orderStatus || order?.status || '').trim()
+
 const OrdersSection = () => {
   const navigate = useNavigate()
   const [orders, setOrders] = useState([])
@@ -84,7 +86,9 @@ const OrdersSection = () => {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold text-[#1f4d36]">My orders</h2>
-      {orders.map((order) => (
+      {orders.map((order) => {
+        const rawStatus = getOrderStatus(order)
+        return (
         <div
           key={order._id}
           className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
@@ -94,7 +98,7 @@ const OrdersSection = () => {
               Order <span className="font-mono text-gray-800">{String(order._id).slice(-8)}</span>
             </span>
             <span className="capitalize">
-              Status: <strong className="text-[#1f4d36]">{order.status || '—'}</strong>
+              Status: <strong className="text-[#1f4d36]">{rawStatus || '—'}</strong>
             </span>
             <div className="flex flex-wrap items-center gap-3">
               <span>{order.createdAt ? new Date(order.createdAt).toLocaleString() : ''}</span>
@@ -148,7 +152,8 @@ const OrdersSection = () => {
             <Price amount={order.totalPrice} size="lg" />
           </div>
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

@@ -22,6 +22,8 @@ const normalizeStatus = (raw) => {
   return legacy[lower] || s
 }
 
+const getOrderStatus = (order) => String(order?.orderStatus || order?.status || '').trim()
+
 const formatAddress = (addr) => {
   if (!addr || typeof addr !== 'object') return '—'
   const parts = [
@@ -95,7 +97,8 @@ const OrderTracking = () => {
     )
   }
 
-  const statusNorm = normalizeStatus(order.status)
+  const rawStatus = getOrderStatus(order)
+  const statusNorm = normalizeStatus(rawStatus)
   const isCancelled = statusNorm === 'Cancelled'
   const statusIndex = STEPS.indexOf(statusNorm)
   const effectiveIndex = isCancelled ? -1 : (statusIndex >= 0 ? statusIndex : 0)
@@ -186,7 +189,7 @@ const OrderTracking = () => {
             )}
 
             <p className="mt-6 text-lg font-semibold text-[#1f4d36]">
-              Order Status: {order.status || '—'}
+              Order Status: {rawStatus || '—'}
             </p>
 
             <div className="mt-8 border-t border-gray-100 pt-6">
