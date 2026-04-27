@@ -6,10 +6,11 @@ import { Button } from '../components/ui/Button'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../services/api'
 
-const GoogleConsentButton = ({ onSuccess, onError, disabled }) => {
-  const googleLogin = useGoogleLogin({
+const GooglePopupButton = ({ onSuccess, onError, disabled }) => {
+  const openGooglePopup = useGoogleLogin({
+    flow: 'implicit',
+    ux_mode: 'popup',
     scope: 'openid email profile',
-    prompt: 'consent select_account',
     onSuccess,
     onError,
   })
@@ -17,7 +18,7 @@ const GoogleConsentButton = ({ onSuccess, onError, disabled }) => {
   return (
     <button
       type="button"
-      onClick={() => googleLogin()}
+      onClick={() => openGooglePopup()}
       disabled={disabled}
       className="w-full border border-gray-300 rounded-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70"
     >
@@ -29,7 +30,7 @@ const GoogleConsentButton = ({ onSuccess, onError, disabled }) => {
 const Login = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, loginWithGoogle, loginWithOtp } = useAuth()
+  const { login, loginWithGoogle, loginWithOtp, setUser } = useAuth()
   const [isRegister, setIsRegister] = useState(false)
   const [authMode, setAuthMode] = useState('password')
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'user' })
@@ -42,9 +43,10 @@ const Login = () => {
   const [otpSending, setOtpSending] = useState(false)
   const [otpVerifying, setOtpVerifying] = useState(false)
   const [otpCooldown, setOtpCooldown] = useState(0)
-  const [googleDebugToken, setGoogleDebugToken] = useState('')
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
-  const isDev = import.meta.env.DEV
+  const rawApiUrl = String(import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '')
+  const googleClientId = String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
+  const frontendOrigin = window.location.origin
+  const googleAuthUrl = `${rawApiUrl || 'https://api.farmycure.com'}/api/auth/google?redirect=${encodeURIComponent(frontendOrigin)}`
 
   const navigateAfterLogin = () => {
     const raw = location.state?.from
@@ -146,19 +148,62 @@ const Login = () => {
     return () => window.clearInterval(timer)
   }, [otpCooldown])
 
-  const handleGoogleSuccess = async (response) => {
-    if (!response?.access_token) {
-      setError('Google login failed. Please try again.')
+  useEffect(() => {
+    const hashValue = window.location.hash || ''
+    const queryString = hashValue.includes('?') ? hashValue.split('?')[1] : ''
+    if (!queryString) return
+    const params = new URLSearchParams(queryString)
+    const token = params.get('token')
+    const callbackError = params.get('error')
+    if (callbackError) {
+      setError('Google authentication failed')
       return
     }
-    if (isDev) {
-      setGoogleDebugToken(response.access_token)
+    if (!token) return
+
+    let parsedPayload = {}
+    try {
+      const payloadBase64 = token.split('.')[1] || ''
+      if (payloadBase64) {
+        parsedPayload = JSON.parse(atob(payloadBase64))
+      }
+    } catch {
+      parsedPayload = {}
+    }
+
+    const userData = {
+      _id: parsedPayload.id || '',
+      role: parsedPayload.role || 'user',
+      token,
+      accessToken: token,
+      refreshToken: token,
+    }
+    localStorage.setItem('farmycure_token', token)
+    localStorage.setItem('farmycure_refresh_token', token)
+    localStorage.setItem('farmycure_user', JSON.stringify(userData))
+    setUser(userData)
+    window.history.replaceState({}, document.title, '/#/login')
+    navigateAfterLogin()
+  }, [])
+
+  const handleGoogleRedirect = () => {
+    setError('')
+    setSuccess('')
+    setGoogleLoading(true)
+    window.location.href = googleAuthUrl
+  }
+
+  const handleGooglePopupSuccess = async (response) => {
+    const accessToken = String(response?.access_token || '').trim()
+    if (!accessToken) {
+      setError('Google authentication failed')
+      return
     }
     setGoogleLoading(true)
     setError('')
     setSuccess('')
     try {
-      await loginWithGoogle({ accessToken: response.access_token })
+      await loginWithGoogle({ accessToken })
       navigateAfterLogin()
     } catch (err) {
       setError(err.message || 'Google authentication failed')
@@ -303,19 +348,18 @@ const Login = () => {
             </div>
             {googleClientId ? (
               <GoogleOAuthProvider clientId={googleClientId}>
-                <div className="flex justify-center">
-                  <GoogleConsentButton
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => setError('Google authentication failed')}
-                    disabled={googleLoading}
-                  />
-                </div>
+                <GooglePopupButton
+                  onSuccess={handleGooglePopupSuccess}
+                  onError={() => setError('Google authentication failed')}
+                  disabled={googleLoading}
+                />
               </GoogleOAuthProvider>
             ) : (
               <button
                 type="button"
-                disabled
-                className="w-full border border-gray-200 rounded-card px-4 py-3 text-sm text-gray-500 cursor-not-allowed"
+                onClick={handleGoogleRedirect}
+                disabled={googleLoading}
+                className="w-full border border-gray-300 rounded-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 Continue with Google
               </button>
@@ -326,25 +370,9 @@ const Login = () => {
             <p className="mt-2 text-xs text-gray-500 text-center">
               Continue with Google will log you in or create your account automatically.
             </p>
-            {isDev && googleDebugToken && (
-              <div className="mt-3 rounded-card border border-amber-200 bg-amber-50 p-3">
-                <p className="text-xs text-amber-900 mb-2">
-                  Dev helper: use this token with backend verify script.
-                </p>
-                <textarea
-                  readOnly
-                  value={googleDebugToken}
-                  className="w-full h-20 rounded border border-amber-200 bg-white px-2 py-1 text-[10px] text-gray-700"
-                />
-                <button
-                  type="button"
-                  onClick={() => navigator.clipboard.writeText(googleDebugToken)}
-                  className="mt-2 text-xs font-medium text-[#1f4d36] underline"
-                >
-                  Copy token
-                </button>
-              </div>
-            )}
+            <p className="mt-1 text-[11px] text-gray-500 text-center">
+              If popup is blocked, allow popups or retry.
+            </p>
           </div>
 
           <div className="mt-4 text-sm text-center">
