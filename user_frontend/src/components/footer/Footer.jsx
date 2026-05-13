@@ -118,6 +118,16 @@ const Footer = () => {
                     {contactInfo.phone}
                   </a>
                 </li>
+                {contactInfo.whatsapp && (
+                  <li className="flex items-start space-x-3">
+                    <svg className="w-5 h-5 text-sage mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.52 3.48A11.87 11.87 0 0012.06 0C5.47 0 .11 5.36.11 11.95c0 2.11.55 4.18 1.59 6.01L0 24l6.22-1.63a11.9 11.9 0 005.84 1.49h.01c6.58 0 11.94-5.36 11.94-11.95 0-3.19-1.24-6.18-3.49-8.43zM12.07 21.7a9.8 9.8 0 01-5-1.37l-.36-.22-3.69.97.99-3.59-.24-.37a9.78 9.78 0 01-1.51-5.18c0-5.41 4.4-9.81 9.82-9.81 2.62 0 5.08 1.02 6.93 2.87a9.74 9.74 0 012.87 6.94c0 5.41-4.4 9.81-9.81 9.81zm5.38-7.36c-.29-.15-1.71-.85-1.98-.94-.27-.1-.46-.15-.66.14-.2.3-.75.95-.92 1.14-.17.2-.34.22-.63.08-.29-.14-1.24-.46-2.36-1.47-.87-.77-1.45-1.73-1.62-2.02-.17-.29-.02-.45.13-.6.13-.13.29-.34.43-.51.14-.17.19-.29.28-.48.1-.2.05-.37-.02-.52-.08-.14-.66-1.59-.91-2.17-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.52.08-.8.37s-1.04 1.01-1.04 2.46 1.06 2.85 1.21 3.05c.15.2 2.08 3.18 5.04 4.46.7.3 1.25.48 1.68.62.71.22 1.36.19 1.88.12.57-.08 1.71-.7 1.95-1.38.24-.68.24-1.26.17-1.38-.07-.12-.27-.2-.56-.34z"/>
+                    </svg>
+                    <a href={`https://wa.me/${contactInfo.whatsapp}`} target="_blank" rel="noopener noreferrer" className="font-body text-gray-300 hover:text-sage transition-colors">
+                      WhatsApp: {contactInfo.phone}
+                    </a>
+                  </li>
+                )}
                 <li className="flex items-start space-x-3">
                   <svg className="w-5 h-5 text-sage mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>

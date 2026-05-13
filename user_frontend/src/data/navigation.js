@@ -37,7 +37,8 @@ export const socialLinks = [
 ]
 
 export const contactInfo = {
-  email: 'hello@farmycure.com',
-  phone: '+91 97931 80013',
+  email: 'support@farmycure.com',
+  phone: '+91 9793180013',
+  whatsapp: '919793180013',
   address: '123 Organic Farm Road, Green Valley, Karnataka 560001',
 }

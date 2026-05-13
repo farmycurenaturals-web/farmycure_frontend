@@ -6,19 +6,36 @@ import { Button } from '../components/ui/Button'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../services/api'
 
-const GooglePopupButton = ({ onSuccess, onError, disabled }) => {
+const GooglePopupButton = ({ onSuccess, onError, onFallbackRedirect, disabled }) => {
   const openGooglePopup = useGoogleLogin({
     flow: 'implicit',
     ux_mode: 'popup',
     scope: 'openid email profile',
     onSuccess,
-    onError,
+    onError: (err) => {
+      console.error('Google popup login error:', err)
+      if (
+        err?.type === 'popup_closed' ||
+        err?.type === 'popup_failed_to_open' ||
+        err?.error === 'popup_blocked_by_browser'
+      ) {
+        onFallbackRedirect?.()
+        return
+      }
+      onError?.(err)
+    },
   })
 
   return (
     <button
       type="button"
-      onClick={() => openGooglePopup()}
+      onClick={() => {
+        try {
+          openGooglePopup()
+        } catch {
+          onFallbackRedirect?.()
+        }
+      }}
       disabled={disabled}
       className="w-full border border-gray-300 rounded-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70"
     >
@@ -156,7 +173,12 @@ const Login = () => {
     const token = params.get('token')
     const callbackError = params.get('error')
     if (callbackError) {
-      setError('Google authentication failed')
+      const errorMessages = {
+        google_auth_failed: 'Google authentication was denied or failed. Please try again.',
+        google_callback_failed: 'Something went wrong after Google login. Please try again.',
+      }
+      setError(errorMessages[callbackError] || 'Google authentication failed. Please try again.')
+      window.history.replaceState({}, document.title, '/#/login')
       return
     }
     if (!token) return
@@ -165,7 +187,7 @@ const Login = () => {
     try {
       const payloadBase64 = token.split('.')[1] || ''
       if (payloadBase64) {
-        parsedPayload = JSON.parse(atob(payloadBase64))
+        parsedPayload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')))
       }
     } catch {
       parsedPayload = {}
@@ -195,18 +217,24 @@ const Login = () => {
 
   const handleGooglePopupSuccess = async (response) => {
     const accessToken = String(response?.access_token || '').trim()
-    if (!accessToken) {
-      setError('Google authentication failed')
+    const credential = String(response?.credential || '').trim()
+    if (!accessToken && !credential) {
+      setError('No token received from Google. Please try the redirect option.')
       return
     }
     setGoogleLoading(true)
     setError('')
     setSuccess('')
     try {
-      await loginWithGoogle({ accessToken })
+      if (credential) {
+        await loginWithGoogle({ credential })
+      } else {
+        await loginWithGoogle({ accessToken })
+      }
       navigateAfterLogin()
     } catch (err) {
-      setError(err.message || 'Google authentication failed')
+      console.error('Google login backend error:', err)
+      setError(err.message || 'Google authentication failed. Please try the redirect option.')
     } finally {
       setGoogleLoading(false)
     }
@@ -350,7 +378,12 @@ const Login = () => {
               <GoogleOAuthProvider clientId={googleClientId}>
                 <GooglePopupButton
                   onSuccess={handleGooglePopupSuccess}
-                  onError={() => setError('Google authentication failed')}
+                  onError={(err) => {
+                    console.error('Google OAuth error:', err)
+                    setError('Google authentication failed. Try the redirect option below.')
+                    setGoogleLoading(false)
+                  }}
+                  onFallbackRedirect={handleGoogleRedirect}
                   disabled={googleLoading}
                 />
               </GoogleOAuthProvider>
@@ -364,14 +397,21 @@ const Login = () => {
                 Continue with Google
               </button>
             )}
+            {googleClientId && (
+              <button
+                type="button"
+                onClick={handleGoogleRedirect}
+                disabled={googleLoading}
+                className="mt-2 w-full text-xs text-gray-500 hover:text-gray-700 underline"
+              >
+                Popup not working? Click here to sign in via redirect
+              </button>
+            )}
             {googleLoading && (
               <p className="mt-2 text-xs text-gray-500 text-center">Signing in with Google...</p>
             )}
             <p className="mt-2 text-xs text-gray-500 text-center">
               Continue with Google will log you in or create your account automatically.
-            </p>
-            <p className="mt-1 text-[11px] text-gray-500 text-center">
-              If popup is blocked, allow popups or retry.
             </p>
           </div>
 
