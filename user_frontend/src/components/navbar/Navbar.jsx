@@ -1,22 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { useScrollPosition } from '../../hooks/useScrollPosition'
 import NavLinks from './NavLinks'
-import MobileMenu from './MobileMenu'
 import CartIcon from './CartIcon'
 import { Container } from '../ui/Container'
 import Logo from '../../assets/icons/Logo.svg'
 import { useAuth } from '../../context/AuthContext'
 
 const Navbar = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef(null)
-  const { isScrolled } = useScrollPosition()
   const location = useLocation()
-  const isHomePage = location.pathname === '/'
-
-  const shouldBeTransparent = isHomePage && !isScrolled
   const { isAuthenticated, user, logout } = useAuth()
   const avatarSrc = user?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=E5E7EB&color=111827`
 
@@ -36,40 +29,30 @@ const Navbar = () => {
 
   return (
     <>
-      <header
-        className={`
-          sticky top-0 z-50
-          transition-all duration-300
-          ${shouldBeTransparent 
-            ? 'bg-transparent' 
-            : 'bg-white shadow-md'
-          }
-        `}
-      >
+      {/* Top Announcement Strip */}
+      <div className="bg-[#1f4d36] text-white text-[10px] md:text-xs py-1.5 text-center font-medium tracking-wide">
+        Farm-fresh organic products delivered directly to you.
+      </div>
+
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100 transition-all duration-300">
         <Container>
-          <nav className="flex items-center justify-between h-16 md:h-20">
+          <nav className="flex items-center justify-between h-14 md:h-20">
             
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-2 md:gap-3">
               <img 
                 src={Logo} 
                 alt="FarmyCure Logo"
-                className={`h-9 transition-colors duration-300 ${shouldBeTransparent ? 'brightness-0 invert' : ''}`}
+                className="h-7 md:h-9"
               />
-              <span
-                className={`
-                  text-lg font-semibold tracking-wide
-                  transition-colors duration-300
-                  ${shouldBeTransparent ? 'text-white' : 'text-[#1f4d36]'}
-                `}
-              >
+              <span className="text-[15px] md:text-lg font-semibold tracking-wide text-[#1f4d36]">
                 FarmyCure Naturals
               </span>
             </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-8">
-              <NavLinks isTransparent={shouldBeTransparent} />
+              <NavLinks isTransparent={false} />
               {isAuthenticated ? (
                 <div className="relative flex items-center gap-3" ref={profileRef}>
                   <button
@@ -129,48 +112,21 @@ const Navbar = () => {
                   )}
                 </div>
               ) : (
-                <Link to="/login" className={`text-sm font-medium ${shouldBeTransparent ? 'text-white' : 'text-forest'}`}>
+                <Link to="/login" className="text-sm font-medium text-forest">
                   Login
                 </Link>
               )}
-              <CartIcon isTransparent={shouldBeTransparent} />
+              <CartIcon isTransparent={false} />
             </div>
 
-            {/* Mobile: Cart + Menu Button */}
+            {/* Mobile: Cart Only */}
             <div className="flex items-center gap-1 lg:hidden">
-              <CartIcon isTransparent={shouldBeTransparent} />
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="p-2"
-                aria-label="Open menu"
-              >
-                <svg
-                  className={`w-6 h-6 transition-colors duration-300 ${
-                    shouldBeTransparent ? 'text-white' : 'text-forest'
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              </button>
+              <CartIcon isTransparent={false} />
             </div>
 
           </nav>
         </Container>
       </header>
-
-      {/* Mobile Menu */}
-      <MobileMenu
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-      />
     </>
   )
 }

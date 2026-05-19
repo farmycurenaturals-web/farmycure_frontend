@@ -15,8 +15,8 @@ export const Card = ({
       whileHover={hoverable ? hoverLift : undefined}
       className={`
         bg-white
-        rounded-card
-        shadow-md
+        rounded-2xl
+        shadow-[0_2px_8px_rgb(0,0,0,0.04)] border border-gray-100/60
         overflow-hidden
         ${onClick ? 'cursor-pointer' : ''}
         ${className}

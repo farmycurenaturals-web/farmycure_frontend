@@ -285,7 +285,7 @@ const Shop = () => {
         <div className="mt-6 md:mt-8">
             {/* Results count */}
             <div className="flex items-center justify-between mb-6">
-              <p className="font-body text-sm text-gray-500">
+              <p className="font-body text-sm text-gray-500 px-2 sm:px-0">
                 Showing {products.length} product{products.length !== 1 ? 's' : ''} of {totalCount}
                 {effectiveCategory && (
                   <> in <span className="font-medium text-forest">{activeCategoryName}</span></>
@@ -301,7 +301,7 @@ const Shop = () => {
                 initial="hidden"
                 animate="visible"
                 key={`${effectiveCategory || 'all'}-${page}`}
-                className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+                className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-6"
               >
                 {products.map((product) => (
                   <motion.div key={product._id} variants={fadeInUp}>
