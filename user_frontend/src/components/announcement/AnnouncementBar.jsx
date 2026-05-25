@@ -1,31 +1,31 @@
-import Price from '../Price'
+import { useLocation } from 'react-router-dom'
 
-const SEP = <span className="mx-2 text-[#2d6a4f]/50 sm:mx-3">•</span>
+const SEP = (dotColor) => <span className={`mx-2.5 sm:mx-4 ${dotColor}`}>•</span>
 
 const AnnouncementBar = () => {
-  const messagesDesktop = [
-    '100% Organic Farm Products',
+  const location = useLocation()
+  const isHome = location.pathname === '/'
+  
+  const messages = [
+    '100% Organic Products',
     'No Preservatives',
-    'Freshly Packed & Delivered',
-    'Trusted by families across India',
+    'Farm Fresh Delivery',
+    'Sustainable Farming',
+    'Direct From Farm',
   ]
 
-  /** Shorter copy for narrow screens — readable without feeling cramped */
-  const mobileSegments = (
+  const textColor = 'text-white font-semibold'
+  const dotColor = 'text-[#95D5B2]/60'
+
+  const renderedSegments = (
     <>
-      <span className="shrink-0 rounded-full bg-[#2d6a4f]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#1b4332]">
-        Live
-      </span>
-      {SEP}
-      <span>Organic farm products</span>
-      {SEP}
-      <span className="inline-flex items-baseline gap-0.5">
-        Free ship <Price amount={999} size="xs" variant="default" className="!gap-0" />+
-      </span>
-      {SEP}
-      <span>Fresh delivery</span>
-      {SEP}
-      <span>No preservatives</span>
+      {messages.map((message, idx) => (
+        <span key={idx} className="inline-flex items-center">
+          <span className={textColor}>{message}</span>
+          {idx < messages.length - 1 && SEP(dotColor)}
+        </span>
+      ))}
+      {SEP(dotColor)}
     </>
   )
 
@@ -33,50 +33,30 @@ const AnnouncementBar = () => {
     <div
       role="region"
       aria-label="Announcements"
-      className="border-b border-[#95d5b2]/45 bg-[#d8f3dc]"
+      className={`bg-[#163a2d] text-white select-none overflow-hidden h-[34px] flex items-center border-b border-[#1b4332]/40 shadow-sm ${
+        isHome ? 'absolute top-0 left-0 w-full z-50' : 'relative w-full'
+      }`}
     >
-      {/* Mobile: taller tap target, slower marquee, compact copy */}
-      <div className="overflow-hidden md:hidden">
-        <div className="animate-[scroll-left_38s_linear_infinite] pause-animation flex min-h-[44px] w-max items-center whitespace-nowrap py-2.5 pl-4">
-          {[0, 1].map((i) => (
-            <div key={i} className="flex items-center pr-16 font-body text-xs font-medium leading-snug text-[#1b4332]">
-              {mobileSegments}
+      {/* Mobile Ticker */}
+      <div className="overflow-hidden md:hidden w-full">
+        <div className="animate-[scroll-left_30s_linear_infinite] pause-animation flex h-[34px] w-max items-center whitespace-nowrap pl-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-center pr-4 font-body text-[10px] tracking-wide leading-none">
+              {renderedSegments}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Desktop / tablet: full message strip */}
-      <div className="hidden overflow-hidden md:block">
-        <div className="animate-[scroll-left_26s_linear_infinite] pause-animation flex h-10 min-w-max items-center whitespace-nowrap">
-          {[0, 1].map((rowIndex) => (
-            <span key={rowIndex} className="inline-flex items-center">
-              <span className="mx-5 inline-flex items-center rounded-full bg-[#2d6a4f]/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#1b4332]">
-                Live
-              </span>
-              {messagesDesktop.map((message, idx) => (
-                <span
-                  key={`${rowIndex}-${idx}`}
-                  className="mx-2 inline-flex items-center text-sm font-medium text-[#1b4332] sm:mx-3"
-                >
-                  <span>{message}</span>
-                  <span className="mx-2 text-[#40916c]/80 sm:mx-3">•</span>
-                </span>
-              ))}
-              <span className="mx-2 inline-flex items-center text-sm font-medium text-[#1b4332] sm:mx-3">
-                <span>Free Shipping Above</span>
-                <span className="mx-1.5 inline-flex items-baseline">
-                  <Price amount={999} size="xs" variant="default" />
-                </span>
-                <span className="mx-2 text-[#40916c]/80 sm:mx-3">•</span>
-              </span>
+      {/* Desktop Ticker */}
+      <div className="hidden overflow-hidden md:block w-full">
+        <div className="animate-[scroll-left_24s_linear_infinite] pause-animation flex h-[34px] min-w-max items-center whitespace-nowrap">
+          {[0, 1, 2].map((i) => (
+            <span key={i} className="inline-flex items-center pr-4 font-body text-xs tracking-wider">
+              {renderedSegments}
             </span>
           ))}
         </div>
-      </div>
-
-      <div className="sr-only" aria-live="polite">
-        {messagesDesktop.join('. ')}. Free shipping above 999 rupees.
       </div>
     </div>
   )

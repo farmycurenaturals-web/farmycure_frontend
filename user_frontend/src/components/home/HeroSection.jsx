@@ -1,122 +1,133 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
-import { Button } from '../ui/Button'
+import { useNavigate } from 'react-router-dom'
 import { Container } from '../ui/Container'
-import { fadeInUp, staggerContainer } from '../../animations/variants'
 
-const slides = [
-  {
-    title: 'Authentic Organic Products Straight From the Farm',
-    tagline: 'Fresh harvest delivered within 24 hours.',
-    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1080&h=600&fit=crop',
-  },
-  {
-    title: 'Fresh Produce Delivered With Care',
-    tagline: 'Naturally grown, thoughtfully packed.',
-    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1080&h=600&fit=crop',
-  },
-  {
-    title: 'Organic Essentials For Healthy Living',
-    tagline: 'Trusted farms. Transparent quality.',
-    image: 'https://images.unsplash.com/photo-1471194402529-8e0f5a675de6?w=1080&h=600&fit=crop',
-  },
-]
+const LeafIcon = ({ className, style }) => (
+  <svg className={className} style={style} fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+    <path d="M17 8C8 14 3 21 3 21S10 16 19 10C21 9 22 7 22 5C22 3 20 2 18 2C16 2 13 4 17 8z" fill="#95D5B2" opacity="0.4" />
+  </svg>
+)
 
 const HeroSection = () => {
-  const [current, setCurrent] = useState(0)
+  const [searchVal, setSearchVal] = useState('')
+  const navigate = useNavigate()
 
-  useEffect(() => {
-    const t = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length)
-    }, 4500)
-    return () => clearInterval(t)
-  }, [])
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    if (searchVal.trim()) {
+      navigate(`/shop?search=${encodeURIComponent(searchVal.trim())}`)
+    }
+  }
 
   return (
-    <section className="bg-white pb-6 pt-3 md:pt-6">
-      <Container>
-        {/* Compact Top Search Bar */}
-        <div className="mb-4">
-          <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg className="h-[18px] w-[18px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input 
-              type="text" 
-              placeholder="Search for fresh organic products..." 
-              className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-[13px] md:text-sm focus:outline-none focus:ring-1 focus:ring-forest/50 transition-all placeholder-gray-400"
-            />
-          </div>
-        </div>
+    <section className="relative w-full h-[35vh] sm:h-[40vh] md:h-[48vh] lg:h-[52vh] min-h-[260px] sm:min-h-[300px] md:min-h-[400px] lg:min-h-[460px] bg-[#07140e] overflow-hidden select-none">
+      
+      {/* CSS Ambient Animations */}
+      <style>{`
+        @keyframes float-leaf-1 {
+          0% { transform: translateY(-50px) translateX(0) rotate(0deg); opacity: 0; }
+          10% { opacity: 0.6; }
+          90% { opacity: 0.6; }
+          100% { transform: translateY(80vh) translateX(-120px) rotate(180deg); opacity: 0; }
+        }
+        @keyframes float-leaf-2 {
+          0% { transform: translateY(-50px) translateX(0) rotate(0deg); opacity: 0; }
+          15% { opacity: 0.5; }
+          85% { opacity: 0.5; }
+          100% { transform: translateY(80vh) translateX(150px) rotate(-130deg); opacity: 0; }
+        }
+        @keyframes float-particle {
+          0% { transform: translateY(85vh) translateX(0) scale(0.8); opacity: 0; }
+          25% { opacity: 0.35; }
+          75% { opacity: 0.35; }
+          100% { transform: translateY(-10vh) translateX(40px) scale(1.2); opacity: 0; }
+        }
+        @keyframes sunlight-glow {
+          0%, 100% { opacity: 0.15; transform: scale(1); }
+          50% { opacity: 0.28; transform: scale(1.1); }
+        }
+      `}</style>
 
-        {/* Compact Rectangular Banner */}
-        <div className="relative h-[220px] sm:h-[300px] md:h-[400px] rounded-[16px] overflow-hidden shadow-sm border border-gray-100/50">
-          <div
-            className="absolute inset-0 flex transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
-            style={{ transform: `translateX(-${current * 100}%)` }}
-          >
-            {slides.map((slide, idx) => (
-              <div key={idx} className="min-w-full h-full relative">
-                <img 
-                  src={slide.image} 
-                  alt={slide.title} 
-                  className="w-full h-full object-cover object-center" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              </div>
-            ))}
-          </div>
+      {/* EDGE-TO-EDGE HERO BACKGROUND: Proper cover layout for a real e-commerce banner */}
+      <div className="absolute inset-0 w-full h-full select-none">
+        <picture>
+          <source media="(max-width: 768px)" srcSet="/new-hero-bg.jpg" />
+          <img 
+            src="/new-hero-bg.jpg" 
+            alt="FarmyCure Premium Banner" 
+            className="w-full h-full object-cover object-[30%_30%] md:object-[28%_25%] pointer-events-none" 
+          />
+        </picture>
+        {/* Soft, premium gradient overlay to darken the right side for high text contrast while keeping the farmer on the left fully visible */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#07140e]/15 to-[#07140e]/75 z-10 pointer-events-none" />
+        {/* Bottom subtle shadow transition */}
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#07140e]/50 to-transparent z-10 pointer-events-none" />
+      </div>
 
-          <div className="absolute inset-0 z-10 flex flex-col justify-end p-4 md:p-8">
-            <motion.div
-              variants={staggerContainer}
-              initial="hidden"
-              animate="visible"
-              key={current}
-              className="max-w-xl text-left"
+      {/* TEXT OVERLAY: Positioned within the app's safe container, right-aligned, minimal and clean */}
+      <Container className="relative h-full flex items-center justify-end z-20 pt-12 md:pt-16">
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+          className="max-w-[220px] sm:max-w-sm md:max-w-md text-right flex flex-col items-end pr-2 md:pr-0 pointer-events-auto"
+        >
+          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-[#95D5B2] uppercase mb-1 block select-none">
+            Shop the
+          </span>
+          <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white font-bold leading-[1.1] drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
+            Farm Products
+          </h1>
+
+          <p className="hidden md:block text-[9.5px] sm:text-[11px] md:text-xs text-gray-200/90 font-body max-w-xs sm:max-w-sm mt-2 leading-relaxed drop-shadow-sm">
+            Discover premium organic vegetables, dairy, honey, and grains sourced directly from local, sustainable farms.
+          </p>
+          <div className="mt-3 md:mt-4.5 flex gap-3">
+            <button
+              onClick={() => navigate('/shop')}
+              className="px-3.5 py-2 md:px-5 md:py-2.5 bg-[#1B4332] hover:bg-[#2d5c48] text-white font-semibold text-[9.5px] md:text-[11px] rounded-full shadow-[0_4px_14px_rgba(27,67,50,0.35)] transition-all duration-300 transform active:scale-98 border border-[#2d5c48]"
             >
-              <motion.h1
-                variants={fadeInUp}
-                className="text-[18px] sm:text-2xl md:text-4xl font-bold leading-[1.2] text-white mb-1.5 md:mb-2 drop-shadow-md"
-              >
-                {slides[current].title}
-              </motion.h1>
-
-              <motion.h2
-                variants={fadeInUp}
-                className="text-[12px] sm:text-sm md:text-lg font-medium text-white/90 drop-shadow mb-3 md:mb-5"
-              >
-                {slides[current].tagline}
-              </motion.h2>
-
-              <motion.div variants={fadeInUp}>
-                <Link to="/shop">
-                  <Button variant="primary" className="px-5 py-2 md:px-8 md:py-2.5 text-[12px] md:text-sm shadow-md">
-                    Shop Now
-                  </Button>
-                </Link>
-              </motion.div>
-            </motion.div>
+              Shop Now
+            </button>
+            <button
+              onClick={() => navigate('/about')}
+              className="hidden md:block px-4.5 py-2 md:px-5 md:py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-[9.5px] md:text-[11px] rounded-full backdrop-blur-md transition-all duration-300 border border-white/20"
+            >
+              Our Story
+            </button>
           </div>
-
-          {/* Simple Carousel Indicators */}
-          <div className="absolute bottom-3 md:bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 md:gap-2 z-20">
-            {slides.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrent(idx)}
-                className={`h-[4px] rounded-full transition-all duration-300 ${
-                  idx === current ? 'w-5 md:w-8 bg-white' : 'w-2 md:w-3 bg-white/40'
-                }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
-          </div>
-        </div>
+        </motion.div>
       </Container>
+
+      {/* Ambient Animations Layer */}
+      <div className="absolute inset-0 z-15 pointer-events-none overflow-hidden">
+        {/* Sunlight Glow Effect (Top Right) */}
+        <div 
+          className="absolute top-0 right-0 w-[350px] md:w-[500px] h-[350px] md:h-[500px] bg-amber-100/10 rounded-full blur-[80px] mix-blend-screen pointer-events-none"
+          style={{ animation: 'sunlight-glow 9s infinite ease-in-out' }}
+        />
+
+        {/* Floating Leaves */}
+        <LeafIcon className="absolute w-4 h-4" style={{ left: '15%', animation: 'float-leaf-1 14s infinite ease-in-out 1s' }} />
+        <LeafIcon className="absolute w-5 h-5" style={{ left: '45%', animation: 'float-leaf-2 17s infinite ease-in-out 3s' }} />
+        <LeafIcon className="absolute w-4 h-4" style={{ left: '70%', animation: 'float-leaf-1 15s infinite ease-in-out 0s' }} />
+        <LeafIcon className="absolute w-5 h-5" style={{ left: '85%', animation: 'float-leaf-2 20s infinite ease-in-out 5s' }} />
+
+        {/* Rising Particles */}
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-0.5 h-0.5 bg-white/30 rounded-full"
+            style={{
+              left: `${10 + i * 16}%`,
+              animation: `float-particle ${11 + i * 3}s infinite linear`,
+              animationDelay: `${i * 1.5}s`
+            }}
+          />
+        ))}
+      </div>
+
     </section>
   )
 }

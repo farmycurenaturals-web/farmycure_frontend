@@ -1,49 +1,24 @@
-import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Card } from '../ui/Card'
 
 const CategoryCard = ({ category }) => {
-  const isNonVeg = category.id === 'nonVeg'
-  
   return (
-    <Link to={`/shop?category=${category.id}`}>
-      <Card hoverable className="h-full">
-        {/* Image */}
-        <div className="relative h-48 md:h-56 overflow-hidden">
-          <img
-            src={category.image}
-            alt={category.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-          {isNonVeg && (
-            <span className="absolute top-3 right-3 bg-nonveg text-white text-xs font-semibold px-2 py-1 rounded">
-              Non-Veg
-            </span>
-          )}
-        </div>
+    <Link to={`/shop?category=${category.id}`} className="group flex flex-col items-center select-none">
+      {/* Circular Image Container */}
+      <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden bg-white border border-gray-100 shadow-[0_4px_12px_rgba(27,67,50,0.03)] group-hover:shadow-[0_8px_20px_rgba(27,67,50,0.08)] group-hover:scale-105 group-hover:border-[#1B4332]/40 transition-all duration-300 flex items-center justify-center">
+        <img
+          src={category.image}
+          alt={category.name}
+          className="w-full h-full object-cover transition-transform duration-[1s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+          loading="lazy"
+        />
+        {/* Subtle hover overlay */}
+        <div className="absolute inset-0 bg-[#1B4332]/0 group-hover:bg-[#1B4332]/5 transition-colors duration-300" />
+      </div>
 
-        {/* Content */}
-        <div className="p-5">
-          <h3 className="font-heading text-xl font-semibold text-text-primary mb-2">
-            {category.name}
-          </h3>
-          <p className="font-body text-sm text-gray-600 line-clamp-2">
-            {category.description}
-          </p>
-          
-          {/* Arrow indicator */}
-          <motion.div 
-            className={`mt-4 flex items-center font-medium text-sm ${isNonVeg ? 'text-nonveg' : 'text-forest'}`}
-            whileHover={{ x: 5 }}
-          >
-            <span>Browse Products</span>
-            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </motion.div>
-        </div>
-      </Card>
+      {/* Label */}
+      <span className="mt-3 text-center font-body text-xs md:text-sm font-bold text-gray-800 group-hover:text-[#1B4332] transition-colors tracking-wide leading-tight">
+        {category.name}
+      </span>
     </Link>
   )
 }

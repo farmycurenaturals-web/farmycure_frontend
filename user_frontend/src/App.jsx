@@ -3,6 +3,7 @@ import { Navigate, createHashRouter, RouterProvider, useLocation } from 'react-r
 import { AnimatePresence } from 'framer-motion'
 import { CartProvider } from './context/CartContext'
 import { AuthProvider } from './context/AuthContext'
+import { WishlistProvider } from './context/WishlistContext'
 import IntroSplash from './components/splash/IntroSplash'
 import MainLayout from './layout/MainLayout'
 import Home from './pages/Home'
@@ -93,17 +94,19 @@ function App() {
 
   return (
     <AuthProvider>
-      <CartProvider>
-        <AnimatePresence mode="wait">
-          {showSplash && (
-            <IntroSplash onComplete={() => setShowSplash(false)} />
-          )}
-        </AnimatePresence>
+      <WishlistProvider>
+        <CartProvider>
+          <AnimatePresence mode="wait">
+            {showSplash && (
+              <IntroSplash onComplete={() => setShowSplash(false)} />
+            )}
+          </AnimatePresence>
 
-        {!showSplash && (
-          <RouterProvider router={router} />
-        )}
-      </CartProvider>
+          {!showSplash && (
+            <RouterProvider router={router} />
+          )}
+        </CartProvider>
+      </WishlistProvider>
     </AuthProvider>
   )
 }
