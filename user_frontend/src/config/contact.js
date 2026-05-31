@@ -1,24 +1,22 @@
+import { contactInfo } from '../data/navigation'
+
 /**
  * Public contact details — override via Vite env (prefix VITE_).
  * Restart dev server after changing .env
  */
 const env = import.meta.env
 
-const defaultLocation = 'Andhra Pradesh, India'
-
 export function getContactConfig() {
-  const locationLabel = env.VITE_CONTACT_LOCATION_LABEL || defaultLocation
-  const mapsUrl =
-    env.VITE_CONTACT_MAPS_URL ||
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationLabel)}`
+  const locationLabel = env.VITE_CONTACT_LOCATION_LABEL || contactInfo.address
+  const mapsUrl = env.VITE_CONTACT_MAPS_URL || contactInfo.mapsUrl
 
-  const phoneDisplay = env.VITE_CONTACT_PHONE_DISPLAY || '+91 98765 43210'
+  const phoneDisplay = env.VITE_CONTACT_PHONE_DISPLAY || contactInfo.phone
   const phoneTelRaw =
     (env.VITE_CONTACT_PHONE_TEL && String(env.VITE_CONTACT_PHONE_TEL).trim()) ||
     phoneDisplay.replace(/\s/g, '') ||
-    '+919876543210'
+    '+919793180013'
 
-  const email = env.VITE_CONTACT_EMAIL || 'support@farmycure.com'
+  const email = env.VITE_CONTACT_EMAIL || contactInfo.email
 
   const instagramUrl = env.VITE_CONTACT_INSTAGRAM_URL || 'https://www.instagram.com/farmycure_naturals/'
   const linkedInUrl = env.VITE_CONTACT_LINKEDIN_URL || 'https://www.linkedin.com/in/farmycure-naturals-aa4774403'

@@ -204,7 +204,9 @@ const Contact = () => {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </div>
                 <h3 className="font-bold text-gray-900 text-[15px] mb-1 font-body">Visit Us</h3>
-                <p className="text-[12px] text-gray-400 font-medium font-body truncate">{contact.locationLabel}</p>
+                <p className="text-[13.5px] text-gray-600 font-medium font-body leading-relaxed mt-1.5 whitespace-pre-line">
+                  {contact.locationLabel}
+                </p>
                 <p className="text-[14px] text-blue-700 font-bold mt-2 font-body group-hover:underline">Open Maps →</p>
               </a>
 

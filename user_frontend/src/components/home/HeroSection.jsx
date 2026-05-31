@@ -49,9 +49,9 @@ const variants = {
 }
 
 const HeroSection = () => {
-  const [searchVal, setSearchVal] = useState('')
+
   const [currentIdx, setCurrentIdx] = useState(0)
-  const [transitionType, setTransitionType] = useState('fade') // 'fade' | 'slide' | 'kenburns'
+  const transitionType = 'fade'
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -61,15 +61,10 @@ const HeroSection = () => {
     return () => clearInterval(timer)
   }, [])
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault()
-    if (searchVal.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchVal.trim())}`)
-    }
-  }
+
 
   return (
-    <section className="relative w-full h-[35vh] sm:h-[40vh] md:h-[48vh] lg:h-[52vh] min-h-[260px] sm:min-h-[300px] md:min-h-[400px] lg:min-h-[460px] mt-[34px] bg-[#07140e] overflow-hidden select-none">
+    <section className="relative w-full h-[480px] md:h-[600px] mt-[34px] bg-[#07140e] overflow-hidden select-none">
       
       {/* CSS Ambient Animations */}
       <style>{`
@@ -97,7 +92,7 @@ const HeroSection = () => {
         }
       `}</style>
 
-      {/* EDGE-TO-EDGE HERO BACKGROUND: Proper cover layout for a real e-commerce banner */}
+      {/* EDGE-TO-EDGE HERO BACKGROUND: Blurred ambient background matching slide colors with contained centered image */}
       <div className="absolute inset-0 w-full h-full select-none overflow-hidden bg-[#07140e] z-0">
         <AnimatePresence initial={false} mode="sync">
           <motion.div
@@ -108,31 +103,44 @@ const HeroSection = () => {
             transition={variants[transitionType].transition}
             className="absolute inset-0 w-full h-full"
           >
-            <picture>
-              <source media="(max-width: 768px)" srcSet={slides[currentIdx].mobile} />
-              <img 
-                src={slides[currentIdx].desktop} 
-                alt={slides[currentIdx].alt} 
-                className="w-full h-full object-cover object-top pointer-events-none" 
-              />
-            </picture>
+            {/* Ambient Blur Layer */}
+            <div className="absolute inset-0 w-full h-full scale-105 filter blur-3xl opacity-35 z-0 pointer-events-none">
+              <picture>
+                <source media="(max-width: 768px)" srcSet={slides[currentIdx].mobile} />
+                <img 
+                  src={slides[currentIdx].desktop} 
+                  alt="" 
+                  className="w-full h-full object-cover" 
+                />
+              </picture>
+            </div>
+
+            {/* Centered Main contained image */}
+            <div className="absolute inset-0 w-full h-full flex items-center justify-center z-10 pointer-events-none">
+              <picture className="h-full flex items-center justify-center">
+                <source media="(max-width: 768px)" srcSet={slides[currentIdx].mobile} />
+                <img 
+                  src={slides[currentIdx].desktop} 
+                  alt={slides[currentIdx].alt} 
+                  className="max-w-full h-full object-contain" 
+                />
+              </picture>
+            </div>
           </motion.div>
         </AnimatePresence>
-        {/* Soft, premium gradient overlay to darken the right side for high text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#07140e]/10 to-[#07140e]/65 z-10 pointer-events-none" />
-        {/* Left side overlay to make sure text baked into slides is highly visible and contrasty on desktop */}
-        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-[#07140e]/5 to-[#07140e]/40 z-10 pointer-events-none" />
+        {/* Soft, premium gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#07140e]/5 to-[#07140e]/30 z-15 pointer-events-none" />
         {/* Bottom subtle shadow transition */}
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#07140e]/55 to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#07140e]/45 to-transparent z-15 pointer-events-none" />
       </div>
 
-      {/* TEXT OVERLAY: Positioned within the app's safe container, right-aligned, minimal and clean */}
-      <Container className="relative h-full flex items-center justify-end z-20 pt-12 md:pt-16">
+      {/* TEXT OVERLAY: Positioned within the visible boundaries of the contained image */}
+      <div className="relative w-full max-w-[270px] md:max-w-[1066px] mx-auto h-full flex items-center justify-end z-20 pt-12 md:pt-16 px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-          className="max-w-[220px] sm:max-w-sm md:max-w-md text-right flex flex-col items-end pr-2 md:pr-0 pointer-events-auto"
+          className="max-w-[200px] sm:max-w-sm md:max-w-md text-right flex flex-col items-end pr-2 md:pr-0 pointer-events-auto"
         >
           <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-[#95D5B2] uppercase mb-1 block select-none">
             Shop the
@@ -159,7 +167,7 @@ const HeroSection = () => {
             </button>
           </div>
         </motion.div>
-      </Container>
+      </div>
 
       {/* Ambient Animations Layer */}
       <div className="absolute inset-0 z-15 pointer-events-none overflow-hidden">
@@ -189,23 +197,7 @@ const HeroSection = () => {
         ))}
       </div>
 
-      {/* Dynamic Transition Switcher (Floating Dev Pill) */}
-      <div className="absolute bottom-4 right-4 z-30 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/40 backdrop-blur-md rounded-full border border-white/10 text-white select-none scale-90 sm:scale-100 transition-all shadow-lg hover:bg-black/60">
-        <span className="text-[9px] font-bold tracking-wider text-white/50 uppercase mr-1 pl-1">Transition:</span>
-        {['fade', 'slide', 'kenburns'].map((t) => (
-          <button
-            key={t}
-            onClick={() => setTransitionType(t)}
-            className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase transition-all ${
-              transitionType === t
-                ? 'bg-[#1B4332] text-white border border-[#2d5c48] shadow-sm'
-                : 'text-white/70 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            {t === 'kenburns' ? 'Ken Burns' : t}
-          </button>
-        ))}
-      </div>
+
 
     </section>
   )

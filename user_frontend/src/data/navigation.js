@@ -40,5 +40,6 @@ export const contactInfo = {
   email: 'support@farmycure.com',
   phone: '+91 9793180013',
   whatsapp: '919793180013',
-  address: '123 Organic Farm Road, Green Valley, Karnataka 560001',
+  address: 'H.No 245B, Vishen Niwas,\nRaptinagar Phase IV,\nGorakhpur, UP, India - 273013',
+  mapsUrl: 'https://maps.app.goo.gl/eHBHqRwF52vtnP4D7?g_st=aw'
 }
