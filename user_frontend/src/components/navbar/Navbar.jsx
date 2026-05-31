@@ -77,7 +77,7 @@ const Navbar = () => {
           isHome
             ? isScrolled
               ? 'fixed top-0 left-0 w-full glass-nav shadow-[0_4px_30px_rgba(27,67,50,0.05)] border-gray-200/40 h-14 md:h-16'
-              : 'absolute top-[34px] left-0 w-full bg-transparent border-transparent h-16 md:h-20'
+              : 'absolute top-[34px] left-0 w-full bg-white/5 backdrop-blur-md border-b border-white/10 h-16 md:h-20'
             : 'sticky top-0 bg-[#FBFBF9]/95 backdrop-blur-md shadow-[0_4px_30px_rgba(27,67,50,0.02)] border-gray-200/45 h-14 md:h-16'
         }`}
       >
